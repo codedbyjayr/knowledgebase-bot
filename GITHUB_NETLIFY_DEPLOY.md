@@ -63,9 +63,9 @@ git push -u origin main
 Go to Site Settings → Environment Variables and add:
 
 ```
-GOOGLE_API_KEY=AIzaSyCn9Nh3YI2v4Q7qEwX7wuG76qiDy_Z4vxM
-VITE_SUPABASE_URL=https://gxcjmnbatoeeddosmbfg.supabase.co
-VITE_SUPABASE_ANON_KEY=[YOUR_ANON_KEY_FROM_.env]
+GOOGLE_API_KEY=[Your Google API Key]
+VITE_SUPABASE_URL=[Your Supabase URL]
+VITE_SUPABASE_ANON_KEY=[Your Supabase Anon Key]
 ```
 
 ⚠️ **IMPORTANT**: Copy the VITE_SUPABASE_ANON_KEY value from your local .env file!
