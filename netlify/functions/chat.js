@@ -48,7 +48,12 @@ exports.handler = async function(event, context) {
 
     const supabase = createClient(
       process.env.VITE_SUPABASE_URL,
-      process.env.VITE_SUPABASE_ANON_KEY
+      process.env.VITE_SUPABASE_ANON_KEY,
+      {
+        realtime: {
+          enabled: false
+        }
+      }
     );
 
     // Create context from FAQs
