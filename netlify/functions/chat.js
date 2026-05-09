@@ -1,6 +1,6 @@
 // Use require for Netlify functions
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const { createClient } = require('@supabase/supabase-js');
+// const { createClient } = require('@supabase/supabase-js'); // DISABLED DUE TO WEBSOCKET ISSUE
 
 exports.handler = async function(event, context) {
   // CORS headers
@@ -46,15 +46,25 @@ exports.handler = async function(event, context) {
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
     const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" });
 
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL,
-      process.env.VITE_SUPABASE_ANON_KEY,
-      {
-        realtime: {
-          enabled: false
-        }
-      }
-    );
+    // SUPABASE DISABLED DUE TO WEBSOCKET ISSUE IN NETLIFY FUNCTIONS
+    // const supabase = createClient(
+    //   process.env.VITE_SUPABASE_URL,
+    //   process.env.VITE_SUPABASE_ANON_KEY,
+    //   {
+    //     auth: {
+    //       persistSession: false,
+    //       autoRefreshToken: false
+    //     },
+    //     realtime: {
+    //       enabled: false
+    //     },
+    //     global: {
+    //       headers: {
+    //         'X-Client-Info': 'netlify-function'
+    //       }
+    //     }
+    //   }
+    // );
 
     // Create context from FAQs
     let context = "You are SagotBuddy, a helpful AI assistant. ";
@@ -70,17 +80,17 @@ exports.handler = async function(event, context) {
     const result = await model.generateContent(context);
     const response = result.response.text();
 
-    // Log unanswered query if no FAQ match
-    const faqMatch = faqs?.some(faq => 
-      message.toLowerCase().includes(faq.question.toLowerCase()) ||
-      faq.question.toLowerCase().includes(message.toLowerCase())
-    );
+    // Log unanswered query if no FAQ match - DISABLED DUE TO WEBSOCKET ISSUE
+    // const faqMatch = faqs?.some(faq => 
+    //   message.toLowerCase().includes(faq.question.toLowerCase()) ||
+    //   faq.question.toLowerCase().includes(message.toLowerCase())
+    // );
 
-    if (!faqMatch && faqs?.length > 0) {
-      await supabase
-        .from('unanswered_queries')
-        .insert([{ query_text: message }]);
-    }
+    // if (!faqMatch && faqs?.length > 0) {
+    //   await supabase
+    //     .from('unanswered_queries')
+    //     .insert([{ query_text: message }]);
+    // }
 
     return {
       statusCode: 200,
