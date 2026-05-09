@@ -30,6 +30,16 @@ exports.handler = async function(event, context) {
   }
 
   try {
+    // Debug: Check if environment variables are available
+    if (!process.env.GOOGLE_API_KEY) {
+      console.error('GOOGLE_API_KEY not found in environment');
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'API configuration error' })
+      };
+    }
+
     const { message, faqs } = JSON.parse(event.body);
 
     // Initialize clients
@@ -73,11 +83,17 @@ exports.handler = async function(event, context) {
       body: JSON.stringify({ response })
     };
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in chat function:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Failed to process request' })
+      body: JSON.stringify({ 
+        error: 'Failed to get AI response',
+        details: error.message,
+        type: error.constructor.name
+      })
     };
   }
 }
