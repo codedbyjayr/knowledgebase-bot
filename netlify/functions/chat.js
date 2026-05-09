@@ -1,7 +1,8 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createClient } from '@supabase/supabase-js';
+// Use require for Netlify functions
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { createClient } = require('@supabase/supabase-js');
 
-export async function handler(event, context) {
+exports.handler = async function(event, context) {
   // Only allow POST
   if (event.httpMethod !== 'POST') {
     return {
