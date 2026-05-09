@@ -12,6 +12,38 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'Server is running',
+    env: {
+      hasGoogleKey: !!process.env.GOOGLE_API_KEY,
+      hasSupabaseUrl: !!process.env.VITE_SUPABASE_URL,
+      hasSupabaseKey: !!process.env.VITE_SUPABASE_ANON_KEY,
+      keyLength: process.env.GOOGLE_API_KEY?.length
+    }
+  });
+});
+
+// Test Gemini endpoint
+app.get('/api/test-gemini', async (req, res) => {
+  try {
+    if (!model) {
+      return res.status(500).json({ error: 'Model not initialized' });
+    }
+    const result = await model.generateContent('Say "Hello, I am working!"');
+    const response = result.response.text();
+    res.json({ success: true, response });
+  } catch (error) {
+    console.error('Test Gemini error:', error);
+    res.status(500).json({ 
+      error: error.message,
+      type: error.constructor.name,
+      status: error.status
+    });
+  }
+});
+
 // Initialize clients
 console.log('Initializing with environment variables:');
 console.log('GOOGLE_API_KEY exists:', !!process.env.GOOGLE_API_KEY);
@@ -21,8 +53,17 @@ if (!process.env.GOOGLE_API_KEY) {
   console.error('ERROR: GOOGLE_API_KEY is not set in environment variables!');
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+let genAI, model;
+try {
+  if (!process.env.GOOGLE_API_KEY) {
+    throw new Error('GOOGLE_API_KEY is missing');
+  }
+  genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+  model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" });
+  console.log('Gemini AI initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize Gemini AI:', error);
+}
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -35,6 +76,11 @@ app.post('/api/chat', async (req, res) => {
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
+    }
+
+    if (!model) {
+      console.error('Gemini model not initialized');
+      return res.status(500).json({ error: 'AI service not available' });
     }
 
     // Create context from FAQs
@@ -57,20 +103,25 @@ Instructions:
 
 User's question: ${message}`;
 
+    console.log('Calling Gemini with prompt length:', prompt.length);
     const result = await model.generateContent(prompt);
     const response = result.response.text();
+    console.log('Gemini response received:', response.substring(0, 100) + '...');
     res.json({ response });
 
   } catch (error) {
-    console.error('Error calling Gemini API:', error);
+    console.error('Error in chat endpoint:', error);
+    console.error('Error stack:', error.stack);
     console.error('Error details:', {
       message: error.message,
-      type: error.type,
-      status: error.status
+      type: error.constructor.name,
+      status: error.status,
+      errorJSON: JSON.stringify(error, null, 2)
     });
     res.status(500).json({ 
       error: 'Failed to get AI response',
-      details: error.message 
+      details: error.message || 'Unknown error',
+      type: error.constructor.name
     });
   }
 });
