@@ -1,0 +1,71 @@
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createClient } from '@supabase/supabase-js';
+
+export async function handler(event, context) {
+  // Only allow POST
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
+  }
+
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+  };
+
+  try {
+    const { message, faqs } = JSON.parse(event.body);
+
+    // Initialize clients
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    const supabase = createClient(
+      process.env.VITE_SUPABASE_URL,
+      process.env.VITE_SUPABASE_ANON_KEY
+    );
+
+    // Create context from FAQs
+    let context = "You are SagotBuddy, a helpful AI assistant. ";
+    if (faqs && faqs.length > 0) {
+      context += "Here are some FAQs you can reference:\n\n";
+      faqs.forEach(faq => {
+        context += `Q: ${faq.question}\nA: ${faq.answer}\n\n`;
+      });
+    }
+    context += `\nUser question: ${message}\n\nProvide a helpful response. If the question matches an FAQ, use that information. Otherwise, provide a general helpful response.`;
+
+    // Generate response
+    const result = await model.generateContent(context);
+    const response = result.response.text();
+
+    // Log unanswered query if no FAQ match
+    const faqMatch = faqs?.some(faq => 
+      message.toLowerCase().includes(faq.question.toLowerCase()) ||
+      faq.question.toLowerCase().includes(message.toLowerCase())
+    );
+
+    if (!faqMatch && faqs?.length > 0) {
+      await supabase
+        .from('unanswered_queries')
+        .insert([{ query_text: message }]);
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ response })
+    };
+  } catch (error) {
+    console.error('Error:', error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Failed to process request' })
+    };
+  }
+}
