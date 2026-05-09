@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Environment Test</title>
+</head>
+<body>
+    <h1>Environment Variables Test</h1>
+    <div id="env-vars"></div>
+    <script>
+        // Test if environment variables are available
+        const envVars = {
+            VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || 'NOT SET',
+            VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || 'NOT SET',
+            MODE: import.meta.env.MODE,
+            PROD: import.meta.env.PROD
+        };
+        
+        document.getElementById('env-vars').innerHTML = `
+            <pre>${JSON.stringify(envVars, null, 2)}</pre>
+        `;
+    </script>
+</body>
+</html>
