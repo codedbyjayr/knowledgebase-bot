@@ -44,7 +44,7 @@ exports.handler = async function(event, context) {
 
     // Initialize clients
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" });
 
     // SUPABASE DISABLED DUE TO WEBSOCKET ISSUE IN NETLIFY FUNCTIONS
     // const supabase = createClient(

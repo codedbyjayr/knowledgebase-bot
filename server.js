@@ -59,7 +59,7 @@ try {
     throw new Error('GOOGLE_API_KEY is missing');
   }
   genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-  model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" });
+  model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" });
   console.log('Gemini AI initialized successfully');
 } catch (error) {
   console.error('Failed to initialize Gemini AI:', error);
